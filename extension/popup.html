@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishXcape - Real-Time Phishing Detection</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E50914" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M12 8v4"/>
+            <path d="M12 16h.01"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Phish<span class="brand-red">Xcape</span></span>
+          <span class="brand-tag">v1.0.0</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-settings-toggle" class="icon-btn" title="API Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Target Website Metadata -->
+    <section class="site-info-card">
+      <div class="site-header">
+        <span class="site-label">TARGET INSPECTION</span>
+        <span id="scan-timestamp" class="site-timestamp">Just now</span>
+      </div>
+      <div id="site-hostname" class="site-hostname">Detecting active website...</div>
+      <div id="site-url" class="site-url" title="Full URL">Analyzing...</div>
+    </section>
+
+    <!-- Main Security Status Banner -->
+    <section id="status-card" class="status-card status-loading">
+      <div class="status-badge-container">
+        <div id="status-badge" class="status-badge">SCANNING</div>
+        <div id="status-threat-level" class="status-threat-level">Evaluating...</div>
+      </div>
+      <h2 id="status-headline" class="status-headline">Analyzing URL Security...</h2>
+      <p id="status-description" class="status-description">Executing offline Random Forest classifier and validating threat intelligence.</p>
+    </section>
+
+    <!-- Alert Guidance (Displays for Phishing or Suspicious) -->
+    <div id="alert-box" class="alert-box" style="display: none;">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">SECURITY RECOMMENDATION</div>
+        <div id="alert-text" class="alert-text">Do not submit login credentials or credit cards.</div>
+      </div>
+    </div>
+
+    <!-- Toggle Details Button -->
+    <div class="details-toggle-container">
+      <button id="btn-toggle-details" class="details-toggle-btn">
+        <span>View Detection Details</span>
+        <svg id="details-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Collapsible Detection Details -->
+    <section id="detection-details" class="detection-details" style="display: none;">
+      
+      <!-- ML Heuristic Card -->
+      <div class="detail-card">
+        <div class="detail-card-header">
+          <span class="detail-title">Offline Random Forest (ML)</span>
+          <span id="ml-badge" class="pill pill-neutral">--</span>
+        </div>
+        <div class="detail-metric-row">
+          <span class="metric-label">Model Ensemble Score:</span>
+          <span id="ml-confidence" class="metric-value">--%</span>
+        </div>
+        <div class="metric-subtext">Consensus voting across 100 decision trees (Score != Bayesian probability).</div>
+        <div class="feature-pills">
+          <div class="feat-pill"><span class="feat-k">HTTPS:</span> <span id="feat-https" class="feat-v">-</span></div>
+          <div class="feat-pill"><span class="feat-k">Length:</span> <span id="feat-len" class="feat-v">-</span></div>
+          <div class="feat-pill"><span class="feat-k">Subdomains:</span> <span id="feat-subs" class="feat-v">-</span></div>
+          <div class="feat-pill"><span class="feat-k">Special Chars:</span> <span id="feat-chars" class="feat-v">-</span></div>
+        </div>
+      </div>
+
+      <!-- Google Safe Browsing Card -->
+      <div class="detail-card">
+        <div class="detail-card-header">
+          <span class="detail-title">Google Safe Browsing (v4)</span>
+          <span id="gsb-badge" class="pill pill-neutral">Checking</span>
+        </div>
+        <div id="gsb-details" class="detail-status-text">Validating threat feeds...</div>
+      </div>
+
+      <!-- VirusTotal Card -->
+      <div class="detail-card">
+        <div class="detail-card-header">
+          <span class="detail-title">VirusTotal Multi-Engine (v3)</span>
+          <span id="vt-badge" class="pill pill-neutral">Checking</span>
+        </div>
+        <div class="detail-metric-row">
+          <span class="metric-label">Malicious Detections:</span>
+          <span id="vt-malicious-count" class="metric-value">--</span>
+        </div>
+        <div id="vt-details" class="detail-status-text">Querying threat intelligence registry...</div>
+      </div>
+
+    </section>
+
+    <!-- Quick Custom URL Tester -->
+    <div class="custom-url-section">
+      <div class="custom-url-input-group">
+        <input type="text" id="custom-url-input" placeholder="Test any URL (e.g. secure.bank.com)..." spellcheck="false">
+        <button id="btn-custom-scan" class="btn-secondary">Test</button>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button id="btn-scan-current" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        Scan Website
+      </button>
+      <button id="btn-refresh" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        Refresh
+      </button>
+    </div>
+
+    <!-- Settings Modal (Drawer) for Safe Browsing & VirusTotal Keys -->
+    <div id="settings-drawer" class="settings-drawer" style="display: none;">
+      <div class="settings-header">
+        <h3>Threat Intelligence API Keys</h3>
+        <button id="btn-close-settings" class="icon-btn">&times;</button>
+      </div>
+      <p class="settings-note">
+        PhishXcape functions 100% offline using its bundled Random Forest model. To enable Google Safe Browsing and VirusTotal cloud checks, provide your personal API keys below (stored securely in local browser storage).
+      </p>
+
+      <div class="input-group">
+        <label for="input-gsb-key">Google Safe Browsing API Key</label>
+        <input type="password" id="input-gsb-key" placeholder="AIzaSy...">
+      </div>
+
+      <div class="input-group">
+        <label for="input-vt-key">VirusTotal API Key (v3)</label>
+        <input type="password" id="input-vt-key" placeholder="e.g. 64-character hex key">
+      </div>
+
+      <div class="settings-actions">
+        <button id="btn-save-keys" class="btn btn-primary">Save Keys</button>
+        <button id="btn-clear-keys" class="btn btn-secondary">Clear Keys</button>
+      </div>
+      <div id="settings-status-msg" class="settings-status-msg"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>Multi-Layer URL Defense Engine</span>
+      <span class="footer-dot">•</span>
+      <span>Zero-Telemetry Privacy</span>
+    </footer>
+
+  </div>
+
+  <script src="utils/feature_extraction.js"></script>
+  <script src="utils/random_forest_predict.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
